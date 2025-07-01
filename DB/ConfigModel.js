@@ -23,7 +23,23 @@ const userSchema = new mongoose.Schema({
         unique: true,
         index: true,
         required: true
-    }
+    },
+    connectionStatus: {
+        type: Boolean,
+        default: false
+    },
+    history: [
+        {
+            createdAt: {
+                type: Date,
+                default: Date.now
+            },
+            status: {
+                type: Boolean,
+                required: true
+            }
+        }
+    ]
 });
 
 const Config = mongoose.model('Config', userSchema);
