@@ -86,6 +86,14 @@ async function main() {
             }
         }
     }
+    if (process.argv[2] === "disconnect") {
+        await ConfigModel.updateMany({
+            connectionStatus: true
+        }, {
+            connectionStatus: false,
+            tries: 1
+        });
+    }
 
 }
 
@@ -105,9 +113,10 @@ async function addSubsToDB() {
     for (let i = 0; i < base64subs.length; i++) {
         console.log(Date.now(), new Date(), "Start Proc For:", base64subs[i]);
         try {
-            const data = await proxyClient.get(base64subs[i], {
-                timeout: 15000,
-            });
+            const data = await axios.get(base64subs[i]);
+            //const data = await proxyClient.get(base64subs[i], {
+            //    timeout: 15000,
+            //});
             const realData = Buffer.from(data.data, 'base64').toString("utf-8");
             let configs = realData.split("\n");
             console.log(Date.now(), new Date(), "Number:", configs.length);
@@ -126,6 +135,8 @@ async function addSubsToDB() {
     for (let i = 0; i < base64subs.length; i++) {
         console.log(Date.now(), new Date(), "Start Proc For:", base64subs[i]);
         try {
+            // const data = await axios.get(base64subs[i]);
+
             const data = (await proxyClient.get(base64subs[i], {
                 timeout: 30000,
             }));
@@ -138,7 +149,7 @@ async function addSubsToDB() {
                 }
             }
         } catch (err) {
-            console.log(err)
+            //console.log(err)
             console.log(Date.now(), new Date(), err.message, "=>", base64subs[i], "=> ERR");
 
         }
