@@ -10,6 +10,9 @@ const base64subs = require("./subsb64.json");
 const path = require("node:path");
 const axios = require("axios");
 const channels = require("./telegrams.json");
+const {connect} = require("mongoose");
+const cliProgress = require("cli-progress");
+const readline = require("node:readline");
 
 let dbExt = "";
 if (process.argv.length > 3) {
@@ -87,14 +90,18 @@ async function main() {
         }
     }
     if (process.argv[2] === "disconnect") {
-        await ConfigModel.updateMany({
-            connectionStatus: true
-        }, {
+        await ConfigModel.updateMany({}, {
             connectionStatus: false,
             tries: 1
         });
     }
-
+    if (process.argv[2] === 'export') {
+        console.log("askfopewkop")
+        await exportConfigs();
+    }
+    if (process.argv[2] === "import") {
+        await importConfigs();
+    }
 }
 
 
@@ -135,11 +142,11 @@ async function addSubsToDB() {
     for (let i = 0; i < base64subs.length; i++) {
         console.log(Date.now(), new Date(), "Start Proc For:", base64subs[i]);
         try {
-            // const data = await axios.get(base64subs[i]);
+            const data = await axios.get(base64subs[i]);
 
-            const data = (await proxyClient.get(base64subs[i], {
-                timeout: 30000,
-            }));
+            //const data = (await proxyClient.get(base64subs[i], {
+            //    timeout: 30000,
+            //}));
             let configs = data.data.split("\n");
             console.log(Date.now(), new Date(), "Number:", configs.length);
             for (let j = 0; j < configs.length; j++) {
@@ -360,3 +367,107 @@ async function getTelegramChannelConfig(id) {
     }
 }
 
+async function exportConfigs() {
+    console.log("Getting total count...");
+    const total = await ConfigModel.countDocuments({});
+    if (total === 0) {
+        console.log("No configs found.");
+        return;
+    }
+
+    const cursor = ConfigModel.find({}).cursor();
+    const writeStream = fs.createWriteStream('./export.txt');
+    const progressBar = new cliProgress.SingleBar({
+        format: 'Progress |{bar}| {percentage}% || {value}/{total} configs',
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
+        hideCursor: true
+    });
+
+    let count = 0;
+    progressBar.start(total, 0);
+
+    for await (const config of cursor) {
+        writeStream.write(config.uri + "\n");
+        count++;
+        progressBar.update(count);
+    }
+
+    writeStream.end();
+    progressBar.stop();
+
+    console.log(`\n✅ Done! Exported ${count} configs.`);
+}
+
+async function importConfigs(filePath = './export.txt') {
+    if (!fs.existsSync(filePath)) {
+        console.error("❌ File not found:", filePath);
+        return;
+    }
+
+    const totalLines = await countLines(filePath);
+    if (totalLines === 0) {
+        console.log("⚠️ File is empty.");
+        return;
+    }
+
+    let addedCount = 0;
+    let duplicateCount = 0;
+    let current = 0;
+
+    const progressBar = new cliProgress.SingleBar({
+        format: 'Importing |{bar}| {percentage}% || {value}/{total} configs || ➕ {added} | 🔁 {duplicate}',
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
+        hideCursor: true
+    }, cliProgress.Presets.shades_classic);
+
+    progressBar.start(totalLines, 0, {
+        added: addedCount,
+        duplicate: duplicateCount
+    });
+
+    const rl = readline.createInterface({
+        input: fs.createReadStream(filePath),
+        crlfDelay: Infinity
+    });
+
+    for await (const line of rl) {
+        const uri = line.trim();
+        if (uri.length === 0) continue;
+
+        const result = await addConfig(uri);
+        if (result === true) {
+            addedCount++;
+        } else {
+            duplicateCount++;
+        }
+
+        current++;
+        progressBar.update(current, {
+            added: addedCount,
+            duplicate: duplicateCount
+        });
+    }
+
+    progressBar.stop();
+
+    console.log(`\n✅ Done! Total: ${current}`);
+    console.log(`➕ Added: ${addedCount}`);
+    console.log(`🔁 Duplicates: ${duplicateCount}`);
+}
+
+
+// تابع کمکی برای شمارش تعداد خطوط فایل
+function countLines(filePath) {
+    return new Promise((resolve, reject) => {
+        let count = 0;
+        const rl = readline.createInterface({
+            input: fs.createReadStream(filePath),
+            crlfDelay: Infinity
+        });
+        rl.on('line', () => count++);
+        rl.on('close', () => resolve(count));
+        rl.on('error', reject);
+    });
+}

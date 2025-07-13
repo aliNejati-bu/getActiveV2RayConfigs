@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    trash: {
+        type: Boolean,
+        default: false
+    },
     history: [
         {
             createdAt: {
