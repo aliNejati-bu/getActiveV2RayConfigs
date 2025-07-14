@@ -13,13 +13,24 @@ const channels = require("./telegrams.json");
 const {connect} = require("mongoose");
 const cliProgress = require("cli-progress");
 const readline = require("node:readline");
+require('dotenv').config();
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+const DEFAULT_DB = process.env.DEFAULT_DB || 'vpns';
+const TEST_CONCURRENCY = parseInt(process.env.TEST_CONCURRENCY || '100', 10);
 
 let dbExt = "";
 if (process.argv.length > 3) {
     dbExt = "-" + process.argv[3];
 }
 
-mongoose.connect('mongodb://localhost:27017/vpns' + dbExt)
+// تعداد کانفیگ همزمان برای تست (از آرگومان یا env)
+let testConcurrency = TEST_CONCURRENCY;
+if (process.argv[2] === 'test' && process.argv[4]) {
+    testConcurrency = parseInt(process.argv[4], 10) || TEST_CONCURRENCY;
+}
+
+mongoose.connect(`${MONGODB_URI}/${DEFAULT_DB}${dbExt}`)
     .then(() => {
         main();
     }).catch(err => console.error('Connection failed:', err));
@@ -33,7 +44,7 @@ async function main() {
     }
     if (process.argv[2] === 'test') {
         while (true) {
-            const configTotest = await getConfigsToTest(100);
+            const configTotest = await getConfigsToTest(testConcurrency);
             if (configTotest.length) {
                 await testConfigs(configTotest);
             }
@@ -75,7 +86,7 @@ async function main() {
     }
     if (process.argv[2] === 'testOLD') {
         while (true) {
-            const configTotest = await getConfigsToTestOverTenTry(20);
+            const configTotest = await getConfigsToTestOverTenTry(testConcurrency);
             if (configTotest.length) {
                 await testConfigs(configTotest);
             }
@@ -83,7 +94,7 @@ async function main() {
     }
     if (process.argv[2] === 'testAll') {
         while (true) {
-            const configTotest = await getConfigsToTestNoTry(100);
+            const configTotest = await getConfigsToTestNoTry(testConcurrency);
             if (configTotest.length) {
                 await testConfigs(configTotest);
             }
@@ -96,7 +107,6 @@ async function main() {
         });
     }
     if (process.argv[2] === 'export') {
-        console.log("askfopewkop")
         await exportConfigs();
     }
     if (process.argv[2] === "import") {
@@ -232,7 +242,10 @@ async function testConfigs(configs) {
 
 async function exportConnectedConfigsToTxt(outputPath = 'connected-configs.txt') {
     try {
-        const connectedConfigs = await ConfigModel.find({connectionStatus: true});
+        const connectedConfigs = await ConfigModel.find({
+            connectionStatus: true,
+            trash: {$ne: true} // Exclude connections in trash
+        });
 
         if (!connectedConfigs.length) {
             console.log('هیچ کانفیگ متصلی یافت نشد.');
@@ -334,8 +347,8 @@ async function getTelegramChannelConfig(id) {
     let configData = fs.readFileSync('./activeConfig').toString();
     const proxyClient = new ProxyClient(configData);
     await proxyClient.connect();
-    const result = await proxyClient.get("https://t.me/s/" + id);
     try {
+        const result = await proxyClient.get("https://t.me/s/" + id);
         let text = result.data;
         const pattern_shadowsocks = /(?<![\w-])(ss:\/\/[^\s<>#]+)/g;
         const pattern_trojan = /(?<![\w-])(trojan:\/\/[^\s<>#]+)/g;
@@ -369,13 +382,13 @@ async function getTelegramChannelConfig(id) {
 
 async function exportConfigs() {
     console.log("Getting total count...");
-    const total = await ConfigModel.countDocuments({});
+    const total = await ConfigModel.countDocuments({trash: {$ne: true}});
     if (total === 0) {
         console.log("No configs found.");
         return;
     }
 
-    const cursor = ConfigModel.find({}).cursor();
+    const cursor = ConfigModel.find({trash: {$ne: true}}).cursor();
     const writeStream = fs.createWriteStream('./export.txt');
     const progressBar = new cliProgress.SingleBar({
         format: 'Progress |{bar}| {percentage}% || {value}/{total} configs',

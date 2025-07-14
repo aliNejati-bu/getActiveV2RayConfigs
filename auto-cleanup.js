@@ -9,7 +9,13 @@ const mongoose = require('mongoose');
 const { moveOldConnectionsToTrash, getConnectionStats } = require('./DB/cleanupConnections');
 
 // Database connection settings
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/your_database_name';
+function getMongoDBUri(databaseName = null) {
+    let dbExt = "";
+    if (databaseName) {
+        dbExt = "-" + databaseName;
+    }
+    return process.env.MONGODB_URI || `mongodb://localhost:27017/vpns${dbExt}`;
+}
 
 // Cleanup settings
 const CLEANUP_CONFIG = {
@@ -18,40 +24,41 @@ const CLEANUP_CONFIG = {
     dryRun: process.env.CLEANUP_DRY_RUN === 'true'
 };
 
-// اتصال به دیتابیس
-async function connectToDatabase() {
+// Connect to database
+async function connectToDatabase(databaseName = null) {
     try {
-        await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log(`[${new Date().toISOString()}] ✅ اتصال به دیتابیس برقرار شد`);
+        const mongoUri = getMongoDBUri(databaseName);
+        await mongoose.connect(mongoUri);
+        console.log(`[${new Date().toISOString()}] ✅ Database connection established: ${mongoUri}`);
     } catch (error) {
-        console.error(`[${new Date().toISOString()}] ❌ خطا در اتصال به دیتابیس:`, error.message);
+        console.error(`[${new Date().toISOString()}] ❌ Error connecting to database:`, error.message);
         process.exit(1);
     }
 }
 
-// بستن اتصال دیتابیس
+// Close database connection
 async function disconnectFromDatabase() {
     try {
         await mongoose.disconnect();
-        console.log(`[${new Date().toISOString()}] ✅ اتصال به دیتابیس بسته شد`);
+        console.log(`[${new Date().toISOString()}] ✅ Database connection closed`);
     } catch (error) {
-        console.error(`[${new Date().toISOString()}] ❌ خطا در بستن اتصال دیتابیس:`, error.message);
+        console.error(`[${new Date().toISOString()}] ❌ Error closing database connection:`, error.message);
     }
 }
 
-// اجرای پاک‌سازی خودکار
-async function runAutoCleanup() {
+// Run automatic cleanup
+async function runAutoCleanup(databaseName = null) {
     const startTime = new Date();
     
     try {
         console.log(`[${startTime.toISOString()}] 🚀 Starting automatic cleanup...`);
+        if (databaseName) {
+            console.log(`[${startTime.toISOString()}] 🗄️  Using database: ${databaseName}`);
+        }
         console.log(`[${startTime.toISOString()}] ⚙️ Settings: ${CLEANUP_CONFIG.days} days, ${CLEANUP_CONFIG.tests} tests, ${CLEANUP_CONFIG.dryRun ? 'test mode' : 'real mode'}`);
         
         // Connect to database
-        await connectToDatabase();
+        await connectToDatabase(databaseName);
         
         // Get statistics before cleanup
         console.log(`[${new Date().toISOString()}] 📊 Getting statistics before cleanup...`);
@@ -110,11 +117,14 @@ async function runAutoCleanup() {
     }
 }
 
-// اجرای اصلی
+// Main execution
 async function main() {
-    const result = await runAutoCleanup();
+    // Get database name from command line arguments
+    const databaseName = process.argv[2] || null;
     
-    // خروج با کد مناسب
+    const result = await runAutoCleanup(databaseName);
+    
+    // Exit with appropriate code
     if (result.success) {
         process.exit(0);
     } else {

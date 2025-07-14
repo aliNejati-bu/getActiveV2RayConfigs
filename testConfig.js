@@ -270,7 +270,8 @@ async function addConfig(rawUrl) {
 function getConfigsToTest(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
-        tries: {$lte: 10} // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
+        tries: {$lte: 10}, // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
+        trash: { $ne: true } // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر
@@ -282,6 +283,7 @@ function getConfigsToTest(limit = 100) {
 function getConfigsToTestNoTry(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
+        trash: { $ne: true } // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر
@@ -293,6 +295,7 @@ function getConfigsToTestNoTry(limit = 100) {
 function getConnectedConfigsToTest(limit = 100) {
     return ConfigModel.find({
         connectionStatus: true,
+        trash: { $ne: true } // Exclude connections in trash
     })
         .sort({
             lastModifiedAt: 1     // در صورت برابر بودن، اولویت با قدیمی‌ترها
@@ -304,7 +307,8 @@ function getConnectedConfigsToTest(limit = 100) {
 function getConfigsToTestOverTenTry(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
-        tries: {$gte: 11} // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
+        tries: {$gte: 11}, // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
+        trash: { $ne: true } // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر

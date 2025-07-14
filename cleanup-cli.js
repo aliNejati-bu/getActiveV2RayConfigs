@@ -1,32 +1,36 @@
 #!/usr/bin/env node
 
 const mongoose = require('mongoose');
-const { moveOldConnectionsToTrash, getConnectionStats, advancedCleanup } = require('./DB/cleanupConnections');
+const { moveOldConnectionsToTrash, getConnectionStats, advancedCleanup, restoreFromTrash, permanentlyDeleteFromTrash, debugDatabase, updateOldConnections, testQueries } = require('./DB/cleanupConnections');
 
-// تنظیمات اتصال به دیتابیس
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/your_database_name';
+// Database connection settings
+function getMongoDBUri(databaseName = null) {
+    let dbExt = "";
+    if (databaseName) {
+        dbExt = "-" + databaseName;
+    }
+    return process.env.MONGODB_URI || `mongodb://localhost:27017/vpns${dbExt}`;
+}
 
-// اتصال به دیتابیس
-async function connectToDatabase() {
+// Connect to database
+async function connectToDatabase(databaseName = null) {
     try {
-        await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('✅ اتصال به دیتابیس برقرار شد');
+        const mongoUri = getMongoDBUri(databaseName);
+        await mongoose.connect(mongoUri);
+        console.log(`✅ Database connection established: ${mongoUri}`);
     } catch (error) {
-        console.error('❌ خطا در اتصال به دیتابیس:', error.message);
+        console.error('❌ Error connecting to database:', error.message);
         process.exit(1);
     }
 }
 
-// بستن اتصال دیتابیس
+// Close database connection
 async function disconnectFromDatabase() {
     try {
         await mongoose.disconnect();
-        console.log('✅ اتصال به دیتابیس بسته شد');
+        console.log('✅ Database connection closed');
     } catch (error) {
-        console.error('❌ خطا در بستن اتصال دیتابیس:', error.message);
+        console.error('❌ Error closing database connection:', error.message);
     }
 }
 
@@ -42,6 +46,11 @@ Commands:
   stats                    Show connection statistics
   cleanup                  Move old connections to trash (default)
   advanced                 Advanced cleanup with more options
+  restore                  Restore connections from trash
+  delete-trash             Permanently delete connections from trash
+  debug                    Debug database structure and content
+  update                   Update old connections to add trash field
+  test-queries             Test different queries to find connections
 
 Options:
   --days <number>         Number of days old (default: 2)
@@ -55,13 +64,16 @@ Examples:
   node cleanup-cli.js cleanup
   node cleanup-cli.js advanced --days 3 --tests 5 --dry-run
   node cleanup-cli.js advanced --move-connected
+  node cleanup-cli.js restore
+  node cleanup-cli.js delete-trash
 `);
 }
 
-// پردازش آرگومان‌های خط فرمان
+// Parse command line arguments
 function parseArguments() {
     const args = process.argv.slice(2);
-    const command = args[0] || 'cleanup';
+    let command = args[0] || 'cleanup';
+    let databaseName = null;
     
     const options = {
         days: 2,
@@ -70,8 +82,17 @@ function parseArguments() {
         moveConnected: false
     };
     
+    // Check if first argument is a database name (not a command)
+    if (command && !command.startsWith('-') && !['stats', 'cleanup', 'advanced', 'restore', 'delete-trash', 'debug', 'help'].includes(command)) {
+        databaseName = command;
+        command = args[1] || 'cleanup';
+    }
+    
     for (let i = 1; i < args.length; i++) {
         const arg = args[i];
+        
+        // Skip if this is the command (after database name)
+        if (databaseName && i === 1) continue;
         
         switch (arg) {
             case '--days':
@@ -91,21 +112,30 @@ function parseArguments() {
                 showHelp();
                 process.exit(0);
                 break;
+            default:
+                // If it's not a flag and not a command, it might be a database name
+                if (!arg.startsWith('-') && !['stats', 'cleanup', 'advanced', 'restore', 'delete-trash', 'debug', 'help'].includes(arg)) {
+                    databaseName = arg;
+                }
+                break;
         }
     }
     
-    return { command, options };
+    return { command, options, databaseName };
 }
 
-// اجرای اصلی
+// Main execution
 async function main() {
     try {
-        const { command, options } = parseArguments();
+        const { command, options, databaseName } = parseArguments();
         
         console.log('🚀 Starting connection cleanup tool...\n');
+        if (databaseName) {
+            console.log(`🗄️  Using database: ${databaseName}\n`);
+        }
         
         // Connect to database
-        await connectToDatabase();
+        await connectToDatabase(databaseName);
         
         let result;
         
@@ -128,6 +158,31 @@ async function main() {
                 }
                 console.log('');
                 result = await advancedCleanup(options);
+                break;
+                
+            case 'restore':
+                console.log('🔄 Restoring connections from trash...\n');
+                result = await restoreFromTrash();
+                break;
+                
+            case 'delete-trash':
+                console.log('🗑️  Permanently deleting connections from trash...\n');
+                result = await permanentlyDeleteFromTrash();
+                break;
+                
+            case 'debug':
+                console.log('🔍 Debugging database structure...\n');
+                result = await debugDatabase();
+                break;
+                
+            case 'update':
+                console.log('🔄 Updating old connections...\n');
+                result = await updateOldConnections();
+                break;
+                
+            case 'test-queries':
+                console.log('🧪 Testing different queries...\n');
+                result = await testQueries();
                 break;
                 
             default:
