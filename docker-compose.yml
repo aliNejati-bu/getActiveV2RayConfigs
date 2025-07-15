@@ -12,6 +12,9 @@ services:
       - DEFAULT_DB=vpns
     depends_on:
       - mongo
+    volumes:
+      - ./connected-configs.txt:/app/connected-configs.txt
+      - ./activeConfig:/app/activeConfig
   mongo:
     image: mongo:4.4
     container_name: my-mongo
