@@ -19,7 +19,8 @@
     "cleanup:prod": "node cleanup-cli.js production",
     "cleanup:prod:stats": "node cleanup-cli.js production stats",
     "cleanup:prod:simple": "node cleanup-cli.js production cleanup",
-    "cleanup:prod:auto": "node auto-cleanup.js production"
+    "cleanup:prod:auto": "node auto-cleanup.js production",
+    "start":"./admin-panel/server.js"
   },
   "keywords": [],
   "author": "",
