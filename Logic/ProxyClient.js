@@ -4,7 +4,6 @@ const {execFile} = require("child_process");
 const axios = require("axios");
 const {SocksProxyAgent} = require("socks-proxy-agent");
 const getPort = require("get-port");
-const os = require("node:os");
 
 class ProxyClient {
     constructor(url) {
@@ -23,11 +22,7 @@ class ProxyClient {
         fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
 
         return new Promise((resolve, reject) => {
-            if (os.platform() === "win32") {
-                this.proc = execFile("./bin/xray.exe", ["-config", this.configPath]);
-            } else {
-                this.proc = execFile("./bin/xray", ["-config", this.configPath]);
-            }
+            this.proc = execFile("./bin/xray", ["-config", this.configPath]);
             let errorLog = "";
 
             this.proc.stderr.on("data", (data) => {
