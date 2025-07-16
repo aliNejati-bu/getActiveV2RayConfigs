@@ -26,15 +26,19 @@ if (process.argv.length > 3) {
 
 // اصلاح اتصال به دیتابیس: اگر MONGODB_URI خودش نام دیتابیس داشت، دوباره اضافه نکن
 function buildMongoUri(baseUri, dbName, dbExt) {
-    // اگر انتهای baseUri اسلش و نام دیتابیس داشت، همان را برگردان
-    const uriParts = baseUri.split('/');
-    const lastPart = uriParts[uriParts.length - 1];
-    if (lastPart && !lastPart.includes(':') && !lastPart.includes('@') && lastPart !== '' && lastPart.indexOf('?') === -1) {
-        // یعنی نام دیتابیس هست
-        return baseUri + dbExt;
+    // اگر baseUri خودش نام دیتابیس داشت (مثلاً .../vpns یا .../vpns?authSource=admin)
+    const match = baseUri.match(/\/([^/?]+)(\?.*)?$/);
+    if (match && match[1] && !match[1].includes(':') && !match[1].includes('@')) {
+        // اگر dbExt وجود داشت، فقط به انتهای نام دیتابیس اضافه شود
+        const dbNameWithExt = match[1] + (dbExt || '');
+        // baseUri بدون نام دیتابیس فعلی:
+        const base = baseUri.replace(/\/[^/?]+(\?.*)?$/, '');
+        // اگر پارامتر ? وجود داشت، آن را نگه داریم
+        const query = match[2] || '';
+        return base + '/' + dbNameWithExt + query;
     } else {
-        // نام دیتابیس اضافه شود
-        return baseUri.replace(/\/$/, '') + '/' + dbName + dbExt;
+        // نام دیتابیس و پسوند را اضافه کن
+        return baseUri.replace(/\/$/, '') + '/' + dbName + (dbExt || '');
     }
 }
 
