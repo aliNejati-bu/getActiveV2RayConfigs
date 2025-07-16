@@ -11,6 +11,10 @@ RUN npm install --production || pnpm install --prod || true
 # Copy the rest of the project files
 COPY . .
 
+# Add execute permission to xray binaries
+RUN chmod +x ./bin/xray || true
+RUN chmod +x ./bin/xray.exe || true
+
 # Expose port (فرض: 3000)
 EXPOSE 3000
 
