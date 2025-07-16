@@ -8,8 +8,8 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://root:FvvGt125t_ffff@mongo:27017
-      - DEFAULT_DB=vpns?authSource=admin
+      - MONGODB_URI=mongodb://root:FvvGt125t_ffff@mongo:27017/vpns?authSource=admin
+      - DEFAULT_DB=vpns
     depends_on:
       - mongo
     volumes:
