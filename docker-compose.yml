@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_URI=mongodb://root:F5k*78S%2B(%2C%5Bo4%3Fq%5DH6a%60V0F@mongo:27017
       - DEFAULT_DB=vpns
     depends_on:
       - mongo
@@ -19,6 +19,9 @@ services:
     image: mongo:4.4
     container_name: my-mongo
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: F5k*78S+(,[o4?q]H6a`V0F
     ports:
       - "27017:27017"
     volumes:
