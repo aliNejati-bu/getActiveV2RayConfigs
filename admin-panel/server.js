@@ -96,7 +96,7 @@ app.post('/api/command', (req, res) => {
         return res.status(400).json({error: 'دستور ارسال نشده است.'});
     }
     const allowed = [
-        'add', 'test', 'createfile', 'testConnected', 'telegram', 'testOLD', 'testAll', 'disconnect', 'export', 'import', 'advanced'
+        'add', 'test', 'createfile', 'testConnected', 'telegram', 'testOLD', 'testAll', 'disconnect', 'export', 'import', 'advanced', 'location'
     ];
     if (!allowed.includes(command)) {
         return res.status(400).json({error: 'دستور مجاز نیست.'});
