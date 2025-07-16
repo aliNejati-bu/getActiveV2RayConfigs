@@ -232,7 +232,7 @@ function sleep(ms) {
 
 async function addConfig(rawUrl) {
     try {
-        await sleep(100);
+        await sleep(50);
         if (rawUrl.startsWith("#")) {
             return false;
         }
