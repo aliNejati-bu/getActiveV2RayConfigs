@@ -5,6 +5,7 @@ const axios = require("axios");
 const {SocksProxyAgent} = require("socks-proxy-agent");
 const getPort = require("get-port");
 const {ConfigModel} = require("./DB/ConfigModel");
+const os = require("node:os");
 
 function parseVmess(url) {
     const decoded = Buffer.from(url.replace("vmess://", ""), "base64").toString("utf-8");
@@ -182,7 +183,12 @@ async function testV2rayConfig(rawUrl) {
     const configPath = path.join(__dirname, `v2ray_temp_${Date.now()}-${Math.random()}.json`);
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
     return new Promise((resolve) => {
-        const proc = execFile("./bin/xray.exe", ["-config", configPath]);
+        let proc;
+        if (os.platform() === 'win32') {
+            proc = execFile("./bin/xray.exe", ["-config", configPath]);
+        } else {
+            proc = execFile("./bin/xray", ["-config", configPath]);
+        }
         let errorLog = "";
         let timeout;
 
@@ -271,7 +277,7 @@ function getConfigsToTest(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
         tries: {$lte: 10}, // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
-        trash: { $ne: true } // Exclude connections in trash
+        trash: {$ne: true} // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر
@@ -283,7 +289,7 @@ function getConfigsToTest(limit = 100) {
 function getConfigsToTestNoTry(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
-        trash: { $ne: true } // Exclude connections in trash
+        trash: {$ne: true} // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر
@@ -295,7 +301,7 @@ function getConfigsToTestNoTry(limit = 100) {
 function getConnectedConfigsToTest(limit = 100) {
     return ConfigModel.find({
         connectionStatus: true,
-        trash: { $ne: true } // Exclude connections in trash
+        trash: {$ne: true} // Exclude connections in trash
     })
         .sort({
             lastModifiedAt: 1     // در صورت برابر بودن، اولویت با قدیمی‌ترها
@@ -308,7 +314,7 @@ function getConfigsToTestOverTenTry(limit = 100) {
     return ConfigModel.find({
         connectionStatus: false,
         tries: {$gte: 11}, // فقط کانفیگ‌هایی که tries حداکثر 10 هستن
-        trash: { $ne: true } // Exclude connections in trash
+        trash: {$ne: true} // Exclude connections in trash
     })
         .sort({
             tries: 1,        // اولویت با tries کمتر
