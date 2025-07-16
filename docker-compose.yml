@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=mongodb://root:FvvGt125t_ffff@mongo:27017
+      - MONGODB_URI=mongodb://root:FvvGt125t_ffff@mongo:27017/?authSource=admin
       - DEFAULT_DB=vpns
     depends_on:
       - mongo
@@ -17,6 +17,7 @@ services:
       - ./activeConfig:/app/activeConfig
       - ./subs.json:/app/subs.json
       - ./subsb64.json:/app/subsb64.json
+
   mongo:
     image: mongo:4.4
     container_name: my-mongo
@@ -28,5 +29,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+
 volumes:
-  mongo-data: 
+  mongo-data:
