@@ -202,6 +202,92 @@ activeConfigForm.onsubmit = async function(e) {
     activeConfigMsg.innerText = 'خطا در ارتباط با سرور.';
   }
 };
+
+// مدیریت و ویرایش subs.json
+const subsConfigForm = document.getElementById('subsConfigForm');
+const subsConfigContent = document.getElementById('subsConfigContent');
+const subsConfigMsg = document.getElementById('subsConfigMsg');
+const loadSubsConfigBtn = document.getElementById('loadSubsConfig');
+
+loadSubsConfigBtn.onclick = async function() {
+  subsConfigMsg.innerText = '';
+  try {
+    const res = await fetch('/api/subs');
+    const data = await res.json();
+    if (res.ok) {
+      subsConfigContent.value = data.content;
+      subsConfigMsg.innerText = 'مقدار فعلی بارگذاری شد.';
+    } else {
+      subsConfigMsg.innerText = data.error || 'خطا در دریافت مقدار.';
+    }
+  } catch (e) {
+    subsConfigMsg.innerText = 'خطا در ارتباط با سرور.';
+  }
+};
+
+subsConfigForm.onsubmit = async function(e) {
+  e.preventDefault();
+  subsConfigMsg.innerText = '';
+  const content = subsConfigContent.value;
+  try {
+    const res = await fetch('/api/subs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      subsConfigMsg.innerText = 'ذخیره شد.';
+    } else {
+      subsConfigMsg.innerText = data.error || 'خطا در ذخیره مقدار.';
+    }
+  } catch (e) {
+    subsConfigMsg.innerText = 'خطا در ارتباط با سرور.';
+  }
+};
+
+// مدیریت و ویرایش subsb64.json
+const subsb64ConfigForm = document.getElementById('subsb64ConfigForm');
+const subsb64ConfigContent = document.getElementById('subsb64ConfigContent');
+const subsb64ConfigMsg = document.getElementById('subsb64ConfigMsg');
+const loadSubsb64ConfigBtn = document.getElementById('loadSubsb64Config');
+
+loadSubsb64ConfigBtn.onclick = async function() {
+  subsb64ConfigMsg.innerText = '';
+  try {
+    const res = await fetch('/api/subsb64');
+    const data = await res.json();
+    if (res.ok) {
+      subsb64ConfigContent.value = data.content;
+      subsb64ConfigMsg.innerText = 'مقدار فعلی بارگذاری شد.';
+    } else {
+      subsb64ConfigMsg.innerText = data.error || 'خطا در دریافت مقدار.';
+    }
+  } catch (e) {
+    subsb64ConfigMsg.innerText = 'خطا در ارتباط با سرور.';
+  }
+};
+
+subsb64ConfigForm.onsubmit = async function(e) {
+  e.preventDefault();
+  subsb64ConfigMsg.innerText = '';
+  const content = subsb64ConfigContent.value;
+  try {
+    const res = await fetch('/api/subsb64', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      subsb64ConfigMsg.innerText = 'ذخیره شد.';
+    } else {
+      subsb64ConfigMsg.innerText = data.error || 'خطا در ذخیره مقدار.';
+    }
+  } catch (e) {
+    subsb64ConfigMsg.innerText = 'خطا در ارتباط با سرور.';
+  }
+};
 // --- Cleanup Panel Logic ---
 const cleanupStatsBox = document.getElementById('cleanupStatsBox');
 const cleanupStats = document.getElementById('cleanupStats');

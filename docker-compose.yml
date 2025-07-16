@@ -15,6 +15,8 @@ services:
     volumes:
       - ./connected-configs.txt:/app/connected-configs.txt
       - ./activeConfig:/app/activeConfig
+      - ./subs.json:/app/subs.json
+      - ./subsb64.json:/app/subsb64.json
   mongo:
     image: mongo:4.4
     container_name: my-mongo

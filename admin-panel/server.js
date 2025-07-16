@@ -171,6 +171,57 @@ app.post('/api/active-config', (req, res) => {
     }
 });
 
+const SUBS_PATH = path.resolve(__dirname, '../subs.json');
+const SUBSB64_PATH = path.resolve(__dirname, '../subsb64.json');
+
+// API: دریافت مقدار subs.json
+app.get('/api/subs', (req, res) => {
+    try {
+        const content = fs.readFileSync(SUBS_PATH, 'utf8');
+        res.json({content});
+    } catch (e) {
+        res.status(500).json({error: e.message});
+    }
+});
+
+// API: ویرایش مقدار subs.json
+app.post('/api/subs', (req, res) => {
+    const {content} = req.body;
+    try {
+        // Validate JSON array
+        const arr = JSON.parse(content);
+        if (!Array.isArray(arr)) throw new Error('فرمت باید آرایه باشد');
+        fs.writeFileSync(SUBS_PATH, JSON.stringify(arr, null, 2));
+        res.json({status: 'ok'});
+    } catch (e) {
+        res.status(400).json({error: e.message});
+    }
+});
+
+// API: دریافت مقدار subsb64.json
+app.get('/api/subsb64', (req, res) => {
+    try {
+        const content = fs.readFileSync(SUBSB64_PATH, 'utf8');
+        res.json({content});
+    } catch (e) {
+        res.status(500).json({error: e.message});
+    }
+});
+
+// API: ویرایش مقدار subsb64.json
+app.post('/api/subsb64', (req, res) => {
+    const {content} = req.body;
+    try {
+        // Validate JSON array
+        const arr = JSON.parse(content);
+        if (!Array.isArray(arr)) throw new Error('فرمت باید آرایه باشد');
+        fs.writeFileSync(SUBSB64_PATH, JSON.stringify(arr, null, 2));
+        res.json({status: 'ok'});
+    } catch (e) {
+        res.status(400).json({error: e.message});
+    }
+});
+
 // آمار کامل کلین‌آپ
 app.get('/api/cleanup/stats', async (req, res) => {
     try {

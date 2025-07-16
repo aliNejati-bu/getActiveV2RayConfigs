@@ -197,6 +197,34 @@
             <span id="activeConfigMsg" style="margin-right:16px;color:#1976d2;"></span>
         </form>
     </div>
+    <div id="adminSubsConfig"
+         style="margin-bottom:32px; background:#f7faff; border-radius:10px; box-shadow:0 1px 8px #1976d210; padding:18px 18px 10px 18px; border:1.5px solid #e3eaf7;">
+        <h3 style="color:#1976d2; margin-top:0;">مدیریت لیست سابس (subs.json)</h3>
+        <form id="subsConfigForm">
+            <div class="form-row">
+                <label for="subsConfigContent">مقدار:</label>
+                <textarea id="subsConfigContent" name="subsConfigContent" rows="6"
+                          style="width:100%;font-family:monospace;font-size:0.98em;"></textarea>
+                <button type="button" id="loadSubsConfig">نمایش مقدار فعلی</button>
+            </div>
+            <button type="submit">ذخیره مقدار جدید</button>
+            <span id="subsConfigMsg" style="margin-right:16px;color:#1976d2;"></span>
+        </form>
+    </div>
+    <div id="adminSubsb64Config"
+         style="margin-bottom:32px; background:#f7faff; border-radius:10px; box-shadow:0 1px 8px #1976d210; padding:18px 18px 10px 18px; border:1.5px solid #e3eaf7;">
+        <h3 style="color:#1976d2; margin-top:0;">مدیریت لیست سابس بیس۶۴ (subsb64.json)</h3>
+        <form id="subsb64ConfigForm">
+            <div class="form-row">
+                <label for="subsb64ConfigContent">مقدار:</label>
+                <textarea id="subsb64ConfigContent" name="subsb64ConfigContent" rows="6"
+                          style="width:100%;font-family:monospace;font-size:0.98em;"></textarea>
+                <button type="button" id="loadSubsb64Config">نمایش مقدار فعلی</button>
+            </div>
+            <button type="submit">ذخیره مقدار جدید</button>
+            <span id="subsb64ConfigMsg" style="margin-right:16px;color:#1976d2;"></span>
+        </form>
+    </div>
     <div id="stats">
         <span>تعداد کل کانفیگ‌ها: <b id="totalConfigs">?</b></span>
         <span>تعداد متصل: <b id="connectedConfigs">?</b></span>
