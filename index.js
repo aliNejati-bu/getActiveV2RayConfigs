@@ -112,6 +112,13 @@ async function main() {
     if (process.argv[2] === "import") {
         await importConfigs();
     }
+    if (process.argv[2] === "location") {
+        while (true){
+            const configs = await getConfigsToLocation(10);
+            await testConfigLocations(configs);
+            console.log("End");
+        }
+    }
 }
 
 
@@ -483,4 +490,64 @@ function countLines(filePath) {
         rl.on('close', () => resolve(count));
         rl.on('error', reject);
     });
+}
+
+
+/**
+ * برسی کانکشن های متصل
+ * @param configs
+ * @returns {Promise<Awaited<unknown>[]>}
+ */
+async function testConfigLocations(configs) {
+    console.log(Date.now(), new Date(), "Check Location...")
+    return Promise.all(configs.map(async (config) => {
+        const proxyClient = new ProxyClient(config.uri);
+
+        try {
+            console.log(Date.now(), new Date(), config._id)
+            await proxyClient.connect();
+            let result = await proxyClient.get("https://ipinfo.io/json", {
+                timeout: 15000
+            })
+            await ConfigModel.updateOne({
+                _id: config._id,
+            }, {
+                $set: {
+                    location: {
+                        ip: result.data.ip,
+                        city: result.data.city,
+                        country: result.data.country,
+                        org: result.data.org,
+                    },
+                    lastModifiedAt: new Date()
+                }
+            });
+            console.log(new Date, Date.now(), result.data.country)
+            await proxyClient.disconnect();
+
+        } catch (error) {
+            await proxyClient.disconnect();
+            console.log(new Date(), Date.now(), "Fail");
+            await ConfigModel.updateOne({
+                _id: config._id,
+            }, {
+                $set: {
+                    lastModifiedAt: new Date()
+                }
+            });
+            return {success: false, uri: config.uri, error: error.message};
+        }
+    }));
+}
+
+
+function getConfigsToLocation(limit = 100) {
+    return ConfigModel.find({
+        connectionStatus: true,
+        "location.ip": null
+    })
+        .sort({
+            lastModifiedAt: 1     // در صورت برابر بودن، اولویت با قدیمی‌ترها
+        })
+        .limit(limit);
 }

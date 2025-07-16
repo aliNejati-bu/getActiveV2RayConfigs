@@ -43,7 +43,27 @@ const userSchema = new mongoose.Schema({
                 required: true
             }
         }
-    ]
+    ],
+    location: {
+        type: {
+            ip: {
+                type: String,
+                default: null
+            },
+            city: {
+                type: String,
+                default: null
+            },
+            country: {
+                type: String,
+                default: null
+            },
+            org: {
+                type: String,
+                default: null
+            }
+        }
+    }
 });
 
 const Config = mongoose.model('Config', userSchema);
