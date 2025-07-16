@@ -19,6 +19,16 @@ function getSysInfo() {
     return {ram, cpu};
 }
 
+function buildMongoUri(baseUri, dbName) {
+    const uriParts = baseUri.split('/');
+    const lastPart = uriParts[uriParts.length - 1];
+    if (lastPart && !lastPart.includes(':') && !lastPart.includes('@') && lastPart !== '' && lastPart.indexOf('?') === -1) {
+        return baseUri;
+    } else {
+        return baseUri.replace(/\/$/, '') + '/' + dbName;
+    }
+}
+
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({server});
@@ -50,7 +60,7 @@ const STATS_INTERVAL = parseInt(process.env.STATS_INTERVAL || '5000', 10);
 const TEST_CONCURRENCY = parseInt(process.env.TEST_CONCURRENCY || '100', 10); // تعداد کانفیگ همزمان برای تست
 
 // اتصال به دیتابیس فقط یک بار در ابتدای برنامه
-mongoose.connect(`${MONGODB_URI}/${DEFAULT_DB}`)
+mongoose.connect(buildMongoUri(MONGODB_URI, DEFAULT_DB))
     .then(() => {
         console.log('MongoDB connected');
         const PORT = process.env.PORT || 3001;

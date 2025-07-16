@@ -24,13 +24,27 @@ if (process.argv.length > 3) {
     dbExt = "-" + process.argv[3];
 }
 
+// اصلاح اتصال به دیتابیس: اگر MONGODB_URI خودش نام دیتابیس داشت، دوباره اضافه نکن
+function buildMongoUri(baseUri, dbName, dbExt) {
+    // اگر انتهای baseUri اسلش و نام دیتابیس داشت، همان را برگردان
+    const uriParts = baseUri.split('/');
+    const lastPart = uriParts[uriParts.length - 1];
+    if (lastPart && !lastPart.includes(':') && !lastPart.includes('@') && lastPart !== '' && lastPart.indexOf('?') === -1) {
+        // یعنی نام دیتابیس هست
+        return baseUri + dbExt;
+    } else {
+        // نام دیتابیس اضافه شود
+        return baseUri.replace(/\/$/, '') + '/' + dbName + dbExt;
+    }
+}
+
 // تعداد کانفیگ همزمان برای تست (از آرگومان یا env)
 let testConcurrency = TEST_CONCURRENCY;
 if (process.argv[2] === 'test' && process.argv[4]) {
     testConcurrency = parseInt(process.argv[4], 10) || TEST_CONCURRENCY;
 }
 
-mongoose.connect(`${MONGODB_URI}/${DEFAULT_DB}${dbExt}`)
+mongoose.connect(buildMongoUri(MONGODB_URI, DEFAULT_DB, dbExt))
     .then(() => {
         main();
     }).catch(err => console.error('Connection failed:', err));

@@ -4,12 +4,24 @@ const mongoose = require('mongoose');
 const { moveOldConnectionsToTrash, getConnectionStats, advancedCleanup, restoreFromTrash, permanentlyDeleteFromTrash, debugDatabase, updateOldConnections, testQueries } = require('./DB/cleanupConnections');
 
 // Database connection settings
+function buildMongoUri(baseUri, dbName, dbExt) {
+    const uriParts = baseUri.split('/');
+    const lastPart = uriParts[uriParts.length - 1];
+    if (lastPart && !lastPart.includes(':') && !lastPart.includes('@') && lastPart !== '' && lastPart.indexOf('?') === -1) {
+        return baseUri + dbExt;
+    } else {
+        return baseUri.replace(/\/$/, '') + '/' + dbName + dbExt;
+    }
+}
+
 function getMongoDBUri(databaseName = null) {
     let dbExt = "";
     if (databaseName) {
         dbExt = "-" + databaseName;
     }
-    return process.env.MONGODB_URI || `mongodb://localhost:27017/vpns${dbExt}`;
+    const baseUri = process.env.MONGODB_URI || `mongodb://localhost:27017`;
+    const dbName = process.env.DEFAULT_DB || 'vpns';
+    return buildMongoUri(baseUri, dbName, dbExt);
 }
 
 // Connect to database
