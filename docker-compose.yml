@@ -10,7 +10,7 @@ services:
       - NODE_ENV=production
       - MONGODB_URI=mongodb://mongo:27017
       - DEFAULT_DB=vpns
-      - TEST_CONCURRENCY=50
+      - TEST_CONCURRENCY=25
     depends_on:
       - mongo
     volumes:
