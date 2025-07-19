@@ -21,12 +21,6 @@ services:
     networks:
       - shared-net
 
-  mongo:
-    external: true
-    name: my-mongo
-    networks:
-      - shared-net
-
 networks:
   shared-net:
     external: true
