@@ -84,6 +84,7 @@ async function testV2rayConfig(rawUrl) {
     else throw new Error("Unsupported protocol");
     const port = await getPort();
 
+
     const config = {
         log: {loglevel: "warning"},
         inbounds: [

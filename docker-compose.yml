@@ -18,14 +18,15 @@ services:
       - ./activeConfig:/app/activeConfig
       - ./subs.json:/app/subs.json
       - ./subsb64.json:/app/subsb64.json
+    networks:
+      - shared-net
+
   mongo:
-    image: mongo:4.4
-    container_name: my-mongo
-    restart: unless-stopped
-    #   ports:
-    #      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    command: ["/bin/sh", "-c", "rm -f /data/db/mongod.lock && mongod --bind_ip_all"]
-volumes:
-  mongo-data:
+    external: true
+    name: my-mongo
+    networks:
+      - shared-net
+
+networks:
+  shared-net:
+    external: true
