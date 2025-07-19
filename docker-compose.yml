@@ -11,8 +11,6 @@ services:
       - MONGODB_URI=mongodb://mongo:27017
       - DEFAULT_DB=vpns
       - TEST_CONCURRENCY=25
-    depends_on:
-      - mongo
     volumes:
       - ./connected-configs.txt:/app/connected-configs.txt
       - ./activeConfig:/app/activeConfig
